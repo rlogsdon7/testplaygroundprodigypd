@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        <script src ="scripts.js"></script>
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var asset1 = "necker-vhigh.glb"; //Asset at (x,y) = (-5,0)
+        var asset2 ="tervis-blue-yellow.glb"; //Asset at (x,y) = (-5,5)
+        var asset3 ="midmark.glb"; //Asset at (x,y) = (0,5)
+        var asset4 ="ferno.glb"; //Asset at (x,y) = (5,5)
+        var asset5 ="evenflo.glb"; //Asset at (x,y) = (5,0)
+        var asset6 ="hci.glb"; //Asset at (x,y) = (5,-5)
+        var asset7 ="davinci.glb"; //Asset at (x,y) = (0,-5)
+        var asset8 ="sinoplasty.glb"; //Asset at (x,y) = (-5,-5)
+        var box;
+        
+        var canvas = document.getElementById("renderCanvas");
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        // Initialize Babylon.js variables.
+        let engine,
+            scene,
+            sceneToRender;
+        const createDefaultEngine = function () {
+            return new BABYLON.Engine(canvas, true, {
+            preserveDrawingBuffer: true,
+            stencil: true
+            });
+        };
+
+        var createScene = async function () {
+
+
+    
+        // Creates a basic Babylon Scene object (non-mesh)
+        var scene = new BABYLON.Scene(engine);
+
+        // This creates and positions a free camera (non-mesh)
+        var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, -4), scene);
+        camera.speed = .15
+        // This targets the camera to scene origin
+        camera.setTarget(BABYLON.Vector3.Zero());
+
+        // This attaches the camera to the canvas
+        camera.attachControl(canvas, true);
+
+        // Create a light and aim it vertically to the sky (0, 1, 0).
+        let light = new BABYLON.HemisphericLight('light-1', new BABYLON.Vector3(5, 10, 5), scene);
+        let light2 = new BABYLON.HemisphericLight('light-2', new BABYLON.Vector3(-5, -10, -5), scene);
+        light.intensity = 1;
+        light2.intensity = 1;
+
+        var pl = new BABYLON.PointLight("pl", BABYLON.Vector3.Zero(), scene);
+        pl.diffuse = new BABYLON.Color3(1, 1, 1);
+        pl.specular = new BABYLON.Color3(1, 1, 1);
+        pl.intensity = 0.8;
+        
+        var prodigy = new BABYLON.StandardMaterial("prodigy", scene);
+        prodigy.diffuseTexture = new BABYLON.Texture("https://rlogsdon7.github.io/assets/Prodigy_color_rgb.jpg", scene);
+        prodigy.diffuseTexture.hasAlpha = true;
+        prodigy.backFaceCulling = false;
+
+        var orca = new BABYLON.StandardMaterial("prodigy", scene);
+        orca.diffuseTexture = new BABYLON.Texture("https://rlogsdon7.github.io/assets/orca.png", scene);
+        orca.diffuseTexture.hasAlpha = true;
+        orca.backFaceCulling = false;
+
+        box = BABYLON.MeshBuilder.CreateBox("box", {height: 1, width: 2, depth: 1}, scene);
+        box.material = prodigy;
+        box.position = new BABYLON.Vector3(0,0,0);
+
+        var assetsManager = new BABYLON.AssetsManager(scene);
+        var glb1;
+        var glb1Task = assetsManager.addMeshTask("glb1", "", "https://rlogsdon7.github.io/assets/", asset1);
+        glb1Task.onSuccess = function (task) {
+            glb1 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb1.parent = box;
+            glb1.position = new BABYLON.Vector3(-4.6,-.5,0)
+            glb1.scaling = new BABYLON.Vector3(4.5, 4.5, 4.5);
+            glb1.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }
+        var glb2;
+        var glb2Task = assetsManager.addMeshTask("glb2", "", "https://rlogsdon7.github.io/assets/", asset2);
+        glb2Task.onSuccess = function (task) {
+            glb2 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb2.parent = box;
+            glb2.position = new BABYLON.Vector3(-5.0,4.5,0)
+            glb2.scaling = new BABYLON.Vector3(4.5, 4.5, 4.5);
+            glb2.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb3;
+        var glb3Task = assetsManager.addMeshTask("glb3", "", "https://rlogsdon7.github.io/assets/", asset3);
+        glb3Task.onSuccess = function (task) {
+            glb3 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb3.parent = box;
+            glb3.position = new BABYLON.Vector3(0,5,0)
+            glb3.scaling = new BABYLON.Vector3(12.5, 12.5, 12.5);
+            glb3.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb4;
+        var glb4Task = assetsManager.addMeshTask("glb4", "", "https://rlogsdon7.github.io/assets/", asset4);
+        glb4Task.onSuccess = function (task) {
+            glb4 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb4.parent = box;
+            glb4.position = new BABYLON.Vector3(6.0,4.5,0)
+            glb4.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
+            glb4.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb5;
+        var glb5Task = assetsManager.addMeshTask("glb5", "", "https://rlogsdon7.github.io/assets/", asset5);
+        glb5Task.onSuccess = function (task) {
+            glb5 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb5.parent = box;
+            glb5.position = new BABYLON.Vector3(5.2,-0.7,0)
+            glb5.scaling = new BABYLON.Vector3(4.5, 4.5, 4.5);
+            //glb5.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb6;
+        var glb6Task = assetsManager.addMeshTask("glb6", "", "https://rlogsdon7.github.io/assets/", asset6);
+        glb6Task.onSuccess = function (task) {
+            glb6 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb6.parent = box;
+            glb6.position = new BABYLON.Vector3(5.7,-5.6,0)
+            glb6.scaling = new BABYLON.Vector3(1.5, 1.5, 1.5);
+            //glb6.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb7;
+        var glb7Task = assetsManager.addMeshTask("glb7", "", "https://rlogsdon7.github.io/assets/", asset7);
+        glb7Task.onSuccess = function (task) {
+            glb7 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb7.parent = box;
+            glb7.position = new BABYLON.Vector3(0,-5.6,0)
+            glb7.scaling = new BABYLON.Vector3(0.7, 0.7, 0.7);
+            //glb7.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }	
+        var glb8;
+        var glb8Task = assetsManager.addMeshTask("glb8", "", "https://rlogsdon7.github.io/assets/", asset8);
+        glb8Task.onSuccess = function (task) {
+            glb8 = task.loadedMeshes[0]
+            //place it really far away so people do not see it when it is loaded
+            glb8.parent = box;
+            glb8.position = new BABYLON.Vector3(-5.0,-5.6,0)
+            glb8.scaling = new BABYLON.Vector3(6.5, 6.5, 6.5);
+            glb8.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI / 2, BABYLON.Space.WORLD);
+        }		
+        assetsManager.load()
+        //var box1 = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+        //var box2 = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+        //var box3 = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+        //var box4 = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+        //box1.parent = box
+        //box2.parent = box
+        //box3.parent = box
+        //box4.parent = box
+        //box1.position = new BABYLON.Vector3(5,5,0);
+        //box2.position = new BABYLON.Vector3(-5,-5,0);
+        //box3.position = new BABYLON.Vector3(-5,5,0);
+        //box4.position = new BABYLON.Vector3(5,-5,0);
+        //box1.material = prodigy;
+        //box2.material = prodigy;
+        //box3.material = prodigy;
+        //box4.material = prodigy;
+
+        //Text
+        var plane = BABYLON.MeshBuilder.CreatePlane("plane", {});
+        plane.position = new BABYLON.Vector3(0,0,0)
+        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(plane);
+        var panel = new BABYLON.GUI.StackPanel();
+        advancedTexture.addControl(panel);
+        var header = new BABYLON.GUI.TextBlock();
+        header.height = "700px";
+        header.color = "White";
+        //header.text = "Test";
+        header.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+        header.fontSize = "420"
+        panel.addControl(header);
+
+        var animationLoop = function () {
+            const frameRate = 1;
+            var timeInFrame = 1.5;
+            const xSlide = new BABYLON.Animation("xSlide", "position.x", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+            const keyFrames = []; 
+            keyFrames.push({frame: 0 *  timeInFrame * frameRate,value: 0})
+            keyFrames.push({frame: 3 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 4 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 7 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 8 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 11 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 12 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 15 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 16 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 19 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 20 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 23 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 24 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 27 * timeInFrame * frameRate,value: -5});
+            keyFrames.push({frame: 28 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 31 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 32 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 35 * timeInFrame * frameRate,value: 5});
+            keyFrames.push({frame: 36 * timeInFrame * frameRate,value: 0});
+            keyFrames.push({frame: 39 * timeInFrame * frameRate,value: 0});
+            xSlide.setKeys(keyFrames);
+
+            const ySlide = new BABYLON.Animation("ySlide", "position.y", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+            const keyFrames2 = []; 
+            keyFrames2.push({frame: 0 * timeInFrame * frameRate,value: 0})
+            keyFrames2.push({frame: 3 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 4 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 7 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 8 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 11 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 12 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 15 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 16 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 19 * timeInFrame * frameRate,value: -5});
+            keyFrames2.push({frame: 20 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 23 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 24 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 27 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 28 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 31 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 32 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 35 * timeInFrame * frameRate,value: 5});
+            keyFrames2.push({frame: 36 * timeInFrame * frameRate,value: 0});
+            keyFrames2.push({frame: 39 * timeInFrame * frameRate,value: 0});
+            ySlide.setKeys(keyFrames2);
+
+            const zSlide = new BABYLON.Animation("zSlide", "position.z", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+            const keyFrames3 = []; 
+            keyFrames3.push({frame: 0 * timeInFrame * frameRate,value: 0})
+            keyFrames3.push({frame: 3 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 3.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 4 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 7 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 7.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 8 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 11 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 11.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 12 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 15 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 15.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 16 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 19 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 19.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 20 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 23 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 23.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 24 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 27 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 27.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 28 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 31 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 31.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 32 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 35 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 35.5 * timeInFrame * frameRate,value: 1});
+            keyFrames3.push({frame: 36 * timeInFrame * frameRate,value: 0});
+            keyFrames3.push({frame: 39 * timeInFrame * frameRate,value: 0});
+            zSlide.setKeys(keyFrames3);
+
+            // Create the animation group
+            var animationGroup = new BABYLON.AnimationGroup("my group");
+            animationGroup.addTargetedAnimation(xSlide, box);
+            animationGroup.addTargetedAnimation(ySlide, box);
+            animationGroup.addTargetedAnimation(zSlide, box);
+            animationGroup.play(true);
+
+            // Make sure to normalize animations to the same timeline
+            animationGroup.normalize(0, 100);
+        }
+
+        // Sky material
+        var skyboxMaterial = new BABYLON.SkyMaterial("skyMaterial", scene);
+        skyboxMaterial.backFaceCulling = false;
+        //skyboxMaterial._cachedDefines.FOG = true;
+
+        // Sky mesh (box)
+        var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
+        skybox.material = skyboxMaterial;
+        skybox.material.inclination = -.5
+        skybox.material.luminance = 1.0;
+        skybox.material.turbidity = 45.0;
+        skybox.material.cameraOffset.y = 0.0;
+
+        var transitionAnimation = function (x, y) {
+            const switchFrameRate = 1;
+            var switchTime = 1.5;
+            x = -1 * x;
+            y = -1 * y;
+
+            const xTransitionSlide = new BABYLON.Animation("xTransitionSlide", "position.x", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames = []; 
+            transitionFrames.push({frame: 0 *  switchTime * switchFrameRate,value: box.position.x})
+            transitionFrames.push({frame: 1 *  switchTime * switchFrameRate,value:box.position.x + (x - box.position.x)/2})
+            transitionFrames.push({frame: 2 *  switchTime * switchFrameRate,value: x})
+            xTransitionSlide.setKeys(transitionFrames);
+
+            const yTransitionSlide = new BABYLON.Animation("yTransitionSlide", "position.y", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames2 = []; 
+            transitionFrames2.push({frame: 0 *  switchTime * switchFrameRate,value: box.position.y})
+            transitionFrames2.push({frame: 1 *  switchTime * switchFrameRate,value: box.position.y + (y - box.position.y)/2})
+            transitionFrames2.push({frame: 2 *  switchTime * switchFrameRate,value: y})
+            yTransitionSlide.setKeys(transitionFrames2);
+
+            const zTransitionSlide = new BABYLON.Animation("zTransitionSlide", "position.z", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames3 = []; 
+            transitionFrames3.push({frame: 0 *  switchTime * switchFrameRate,value: 0})
+            transitionFrames3.push({frame: 1 *  switchTime * switchFrameRate,value: 1})
+            transitionFrames3.push({frame: 2 *  switchTime * switchFrameRate,value: 0})
+            zTransitionSlide.setKeys(transitionFrames3);
+
+            // Create the animation group
+            var animationGroup2 = new BABYLON.AnimationGroup("my group");
+            animationGroup2.addTargetedAnimation(xTransitionSlide, box);
+            animationGroup2.addTargetedAnimation(yTransitionSlide, box);
+            animationGroup2.addTargetedAnimation(zTransitionSlide, box);
+
+            // Make sure to normalize animations to the same timeline
+            animationGroup2.normalize(0, 100);
+
+            const xTransitionSlide2 = new BABYLON.Animation("xTransitionSlide2", "position.x", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames4 = []; 
+            transitionFrames4.push({frame: 0 *  switchTime * switchFrameRate,value: x})
+            transitionFrames4.push({frame: 1 *  switchTime * switchFrameRate,value: x + (0 - x)/2})
+            transitionFrames4.push({frame: 2 *  switchTime * switchFrameRate,value: 0})
+            xTransitionSlide2.setKeys(transitionFrames4);
+
+            const yTransitionSlide2 = new BABYLON.Animation("yTransitionSlide2", "position.y", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames5 = []; 
+            transitionFrames5.push({frame: 0 *  switchTime * switchFrameRate,value: y})
+            transitionFrames5.push({frame: 1 *  switchTime * switchFrameRate,value: y + (0 - y)/2})
+            transitionFrames5.push({frame: 2 *  switchTime * switchFrameRate,value: 0})
+            yTransitionSlide2.setKeys(transitionFrames5);
+
+            const zTransitionSlide2 = new BABYLON.Animation("zTransitionSlide2", "position.z", switchFrameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            const transitionFrames6 = []; 
+            transitionFrames6.push({frame: 0 *  switchTime * switchFrameRate,value: 0})
+            transitionFrames6.push({frame: 1 *  switchTime * switchFrameRate,value: 1})
+            transitionFrames6.push({frame: 2 *  switchTime * switchFrameRate,value: 0})
+            zTransitionSlide2.setKeys(transitionFrames6);
+
+            // Create the animation group
+            var animationGroup3 = new BABYLON.AnimationGroup("my group");
+            animationGroup3.addTargetedAnimation(xTransitionSlide2, box);
+            animationGroup3.addTargetedAnimation(yTransitionSlide2, box);
+            animationGroup3.addTargetedAnimation(zTransitionSlide2, box);
+
+            // Make sure to normalize animations to the same timeline
+            animationGroup3.normalize(0, 100);
+
+            scene.stopAnimation(box);
+            animationGroup2.play(true);
+
+            setTimeout(function() {
+                animationGroup3.play(true)
+                setTimeout(function() {
+                    scene.stopAnimation(box);
+                    animationLoop()
+                }, 3000);
+
+            }, 7000);
+            
+
+
+
+        };
+        
+        window.addEventListener("keydown", function (evt) {
+            switch (evt.keyCode) {
+                case 49: transitionAnimation(-5,0); break; // 1
+                case 50: transitionAnimation(-5,5); break; // 2
+                case 51: transitionAnimation(0,5); break; // 3
+                case 52: transitionAnimation(5,5); break; // 4
+                case 53: transitionAnimation(5,0); break; // 5
+                case 54: transitionAnimation(5,-5); break; // 6
+                case 55: transitionAnimation(0,-5); break; // 7
+                case 56: transitionAnimation(-5,-5); break; // 8
+                default: break;
+            }
+        });
+        animationLoop();
+
+        assetsManager.onFinish = function (tasks) {
+            engine.runRenderLoop(function () {
+                scene.render();
+            });
+        };
+        
+        
+
+        const environment = scene.createDefaultEnvironment();
+        // XR
+        const xrHelper = await scene.createDefaultXRExperienceAsync(
+            {
+                // define floor meshes
+                floorMeshes: [environment.ground]
+            }
+            );
+            if (!xrHelper.baseExperience) {
+            // XR support is unavailable.
+            console.log('WebXR support is unavailable');
+            } else {
+            // XR support is available; proceed.
+            return scene;
+            }
+};
+
+        // Create engine.
+        engine = createDefaultEngine();
+        if (!engine) {
+        throw 'Engine should not be null';
+        }
+
+        // Create scene.
+        scene = createScene();
+        scene.then(function (returnedScene) {
+        sceneToRender = returnedScene;
+        });
+
+        // Run render loop to render future frames.
+        engine.runRenderLoop(function () {
+        if (sceneToRender) {
+            sceneToRender.render();
+        }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
